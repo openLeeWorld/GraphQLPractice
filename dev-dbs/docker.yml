@@ -9,7 +9,7 @@ services:
       - '5432:5432'
     environment:
       - POSTGRES_DB=azdev
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_PASSWORD=
       - PGDATA=azdev-data
   mongo:
     container_name: gia_mongo
