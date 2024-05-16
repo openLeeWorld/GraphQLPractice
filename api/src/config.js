@@ -9,3 +9,4 @@ export const port = process.env.PORT;
 export const pgConnectionString = process.env.PG_CONNECTION_STRING;
 
 export const mdbConnectionString = process.env.MDB_CONNECTION_STRING;
+

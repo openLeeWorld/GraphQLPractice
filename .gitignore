@@ -5,3 +5,4 @@ node_modules/
 web/src/dist/
 web/src/.cache/
 prettier.config.js
+api/.env

@@ -1,10 +1,34 @@
+const views = {
+  taskAndUsers: `
+  SELECT t.*,
+    u.id AS "author_id",
+    u.username AS "author_username", 
+    u.first_name AS "author_firstname",
+    u.last_name AS "author_lastname",
+    u.created_at AS "author_createdat"
+  FROM azdev.tasks t
+  JOIN azdev.users u ON (t.user_id = u.id)
+  `,
+}; // 서브쿼리할 땐 별칭을 소문자로 통일해야 인식된다.
+
 export default {
   // ------
   // SELECT
-
+  /* 기존 버전: 
   tasksLatest: `
     SELECT id, content, tags, user_id AS "userId", approach_count AS "approachCount", is_private AS "isPrivate", created_at AS "createdAt"
     FROM azdev.tasks
+    WHERE is_private = FALSE
+    ORDER BY created_at DESC
+    LIMIT 100
+  `, 나중 버전 아래
+  */ 
+
+  tasksLatest: `
+    SELECT o.id, o.content, o.tags, o.user_id AS "userId", o.approach_count AS "approachCount", o.is_private AS "isPrivate", o.created_at AS "createdAt",
+      o.author_id, o.author_username, o.author_firstname AS "author_firstName",
+      o.author_lastname AS "author_lastName", o.author_createdat AS "author_createdAt"
+    FROM (${views.taskAndUsers}) AS o
     WHERE is_private = FALSE
     ORDER BY created_at DESC
     LIMIT 100
@@ -21,9 +45,9 @@ export default {
   approachesForTaskIds: `
     SELECT id, content, user_id AS "userId", task_id AS "taskId", vote_count AS "voteCount", created_at AS "createdAt"
     FROM azdev.approaches
-    WHERE task_id = ANY ($1)
+    WHERE task_id = ANY ($1) 
     ORDER BY vote_count DESC, created_at DESC
-  `,
+  `, 
 
   // $1: taskIds
   // $2: userId (can be null)
@@ -36,6 +60,8 @@ export default {
 
   // $1: searchTerm
   // $2: userId (can be null)
+  // viewable_tasks: 인라인 뷰, 
+  // to_tsvector, websearch_to_tsquery, ts_rank는 postgresql 함수
   searchResults: `
     WITH viewable_tasks AS (
       SELECT *
@@ -43,7 +69,7 @@ export default {
       WHERE (is_private = FALSE OR user_id = $2)
     )
     SELECT id, "taskId", content, tags, "approachCount", "voteCount", "userId", "createdAt", type,
-           ts_rank(to_tsvector(content), websearch_to_tsquery($1)) AS rank
+            ts_rank(to_tsvector(content), websearch_to_tsquery($1)) AS rank
     FROM (
       SELECT id, id AS "taskId", content, tags, approach_count AS "approachCount", null AS "voteCount", user_id AS "userId", created_at AS "createdAt", 'task' AS type
       FROM viewable_tasks

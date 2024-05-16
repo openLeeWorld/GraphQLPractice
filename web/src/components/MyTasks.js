@@ -1,28 +1,59 @@
 import React, { useState, useEffect } from 'react';
 
-import { useStore } from '../store';
-import TaskSummary from './TaskSummary';
-
+//import { useStore } from '../store';
+import TaskSummary, { TASK_SUMMARY_FRAGMENT } from './TaskSummary';
+import { gql, useQuery } from '@apollo/client';
 /** GIA NOTES
  * Define GraphQL operations here...
  */
-
+const MY_TASK_LIST = gql`
+  query myTaskList {
+    me {
+      taskList {
+        id
+        ...TaskSummary
+      }
+    }
+  }
+${TASK_SUMMARY_FRAGMENT}
+`;
+/* 기존 버전
 export default function MyTasks() {
-  const { request } = useStore();
+  const { query } = useStore();
   const [myTaskList, setMyTaskList] = useState(null);
 
   useEffect(() => {
-    /** GIA NOTES
-     *
-     *  1) Invoke the query to get current user list of Tasks
-     *     (You can't use `await` here but `promise.then` is okay)
-     *
-     *  2) Use the line below on the returned data:
+    //* GIA NOTES
+    
+     //*  1) Invoke the query to get current user list of Tasks
+     //*     (You can't use `await` here but `promise.then` is okay)
+    
+     //*  2) Use the line below on the returned data:
+    
+    query(MY_TASK_LIST).then(({ data }) => {
+      setMyTaskList(data.me.taskList);
+    });
+  }, [query]);
 
-      setMyTaskList(API_RESP_FOR_userTaskList);
+  if (!myTaskList) {
+    return <div className="loading">Loading...</div>;
+  }
+*/
 
-     */
-  }, [request]);
+export default function MyTasks() {
+  const [myTaskList, setMyTaskList] = useState(null);
+
+  const { data, error, loading} = useQuery(MY_TASK_LIST);
+
+  if (error) {
+    return <div className="error">{error.message}</div>
+  }
+
+  if (loading) {
+    return <div className="loading">Loading...</div>
+  }
+
+  setMyTaskList(data.me.taskList);
 
   if (!myTaskList) {
     return <div className="loading">Loading...</div>;
